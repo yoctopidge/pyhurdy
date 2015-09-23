@@ -1,0 +1,11 @@
+# Compiled source #
+###################
+*.o
+*.so
+*.pyc
+
+# Everything else #
+###################
+build
+dist
+sort
