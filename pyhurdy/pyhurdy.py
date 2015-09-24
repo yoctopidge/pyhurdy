@@ -10,37 +10,43 @@ from scikits.samplerate import resample
 class PyHurdy():
     def __init__(self, tuning):
         # Sounds
-        self._tenor = "./sounds/drones/tenor.wav"
-        self._bass = "./sounds/drones/bass.wav"
-        self._high_melody = "./sounds/melody/high.wav"
-        self._melody = "./sounds/melody/high.wav"
+        self._tenor = "pyhurdy/pyhsounds//drones/tenor.wav"
+        self._bass = "pyhurdy/pyhsounds//drones/bass.wav"
+        self._high_melody = "pyhurdy/pyhsounds//melody/high.wav"
+        self._melody = "pyhurdy/pyhsounds//melody/high.wav"
         self.pygame=pygame
         self.tenorstate=False
         self.tuning = tuning
         self.bassstate=False
         self.melodystate=False
         self.noteplaying=self.tuning
-        screen = None
-        dispdrivers = ['directfb', 'svgalib', 'fbcon']
-        gotdriver = False
-        for driver in dispdrivers:
-            if not os.getenv('SDL_VIDEODRIVER'):
-                os.putenv('SDL_VIDEODRIVER', driver)
-            try:
-                self.pygame.display.init()
-            except self.pygame.error:
-                continue
-            gotdriver = True
-            break
-            if not gotdriver:
-                raise Exception('Kaboom!')
-        size = (self.pygame.display.Info().current_w, self.pygame.display.Info().current_h)
-        print "Framebuffer size: %d x %d" % (size[0], size[1])
-        screen = self.pygame.display.set_mode(size, self.pygame.FULLSCREEN)
-        # Clear the screen to start
-        screen.fill((0, 0, 0))
-        # Initialise font support
-        self.pygame.font.init()
+        try:
+            screen = None
+            dispdrivers = ['directfb', 'svgalib', 'fbcon']
+            gotdriver = False
+            for driver in dispdrivers:
+                if not os.getenv('SDL_VIDEODRIVER'):
+                    os.putenv('SDL_VIDEODRIVER', driver)
+                try:
+                    self.pygame.display.init()
+                except self.pygame.error:
+                    continue
+                gotdriver = True
+                break
+                if not gotdriver:
+                    raise Exception('Kaboom!')
+            size = (self.pygame.display.Info().current_w, self.pygame.display.Info().current_h)
+            print "Framebuffer size: %d x %d" % (size[0], size[1])
+            screen = self.pygame.display.set_mode(size, self.pygame.FULLSCREEN)
+            # Clear the screen to start
+            screen.fill((0, 0, 0))
+        except:
+            print('No framebuffer found. Assume x11')
+            os.putenv('SDL_VIDEODRIVER', 'x11')
+            self.pygame.init()
+            size = (1024, 768)
+            print "X server size: %d x %d" % (size[0], size[1])
+            screen = self.pygame.display.set_mode(size)
         self.pygame.mixer.init(44100,-16,2,4096)
         # Render the screen
         self.pygame.display.update()
@@ -139,17 +145,11 @@ class PyHurdy():
             self.set_note(note, self.melody)
 
         for x in self.top_keys:
-            print (str(self.top_keys.index(x)) + " " + x)
-            print self.note_dict[x]['key']
             self.keys[self.note_dict[x]['key']]=x
 
         for x in self.bottom_keys:
-            print (str(self.bottom_keys.index(x)) + " " + x)
-            print self.note_dict[x]['key']
             self.keys[self.note_dict[x]['key']]=x
 
-
-        print str(self.note_dict)
         print "TOP : " + str(self.top_keys)
         print "BOTTOM : " + str(self.bottom_keys)
 
@@ -202,20 +202,15 @@ class PyHurdy():
                             globals()[self.tuning+"_note"].play(loops=-1)
                             self.melodystate = True
                     if self.melodystate == True and self.pygame.key.name(event.key).upper() in self.keys.keys():
-                        print self.note_dict[self.noteplaying]['ratio']
-                        print self.note_dict[self.keys[self.pygame.key.name(event.key).upper()]]['ratio']
-        #                if float(self.note_dict[noteplaying]['ratio']) < float(self.note_dict[self.keys[pygame.key.name(event.key).upper()]]['ratio']):
-                        globals()[self.noteplaying+"_note"].fadeout(1)
-                        self.noteplaying = self.keys[self.pygame.key.name(event.key).upper()]
-                        globals()[self.noteplaying+"_note"].play(loops=-1)
-                        print self.note_dict[self.noteplaying]['ratio']
-                        print self.note_dict[self.keys[self.pygame.key.name(event.key).upper()]]['ratio']
-        #                elif noteplaying == TUNING:
-        #                        globals()[TUNING+"_note"].fadeout(1)
-        #                        noteplaying = NOTES[self.keys.index(pygame.key.name(event.key))]
-        #                        globals()[noteplaying.replace('#','sharp')+"_note"].play(loops=-1)
+                        if self.note_dict[self.noteplaying]['ratio'] < self.note_dict[self.keys[self.pygame.key.name(event.key).upper()]]['ratio']:
+                            globals()[self.noteplaying+"_note"].fadeout(1)
+                            self.noteplaying = self.keys[self.pygame.key.name(event.key).upper()]
+                            globals()[self.noteplaying+"_note"].play(loops=-1)
+            #                elif noteplaying == TUNING:
+            #                        globals()[TUNING+"_note"].fadeout(1)
+            #                        noteplaying = NOTES[self.keys.index(pygame.key.name(event.key))]
+            #                        globals()[noteplaying.replace('#','sharp')+"_note"].play(loops=-1)
                 if event.type == KEYUP:
-                    
                     time.sleep(.01)
                     if self.melodystate == True and self.pygame.key.name(event.key).upper() in self.keys.keys():
                         try:
