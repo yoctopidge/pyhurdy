@@ -1,4 +1,6 @@
 #! /usr/bin/env python
+# TODO: ratios are wrong
+# Tuning is high. we're going the wrong way on the dict'
 import time, collections, os
 import numpy, pygame.mixer, pygame.sndarray
 from pygame.locals import *
@@ -55,79 +57,34 @@ class PyHurdy():
         self.play()
 
     def set_scale(self):
-        # Ok. So, why the big dictionary of ratios? Because while we could just
-        # extrapolate the resample ratio, that would mean that we are assuming
-        # that the scale is all 12ths and we do not want to make that assumption.
-        # So, while this seems messy, for now, we want to do this
-
         self.note_dict=collections.OrderedDict()
+        self.notes=[] 
+        twelfth=1.059463094
+#        notes=['c','d','e','f','g','a','b']
+        notes=['b', 'a', 'g', 'f', 'e', 'd', 'c']
+        prior=1
+        for base in range(0,4):
+            for note in notes:
+                self.note_dict[note+str(base)]={'ratio': prior, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''}
+                prior=prior*1.059
+                if note is not "b" and note is not "g":
+                    self.note_dict[note+"sharp"+str(base)]={'ratio': prior, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''}
+                    prior=prior*1.059
+        for note in self.note_dict:
+            self.notes.append(note)
+#        self.toprow = ['F1','F2','F3','F4','F5','F6','F7','F8','F9']
+#        self.bottomrow = ['1','2','3','4','5','6','7','8','9','10', '-','=','BACKSPACE']
+        self.toprow = ['F9', 'F8', 'F7', 'F6', 'F5', 'F4', 'F3', 'F2', 'F1']
+        self.bottomrow = ['BACKSPACE', '=', '-', '10', '9', '8', '7', '6', '5', '4', '3', '2', '1']
 
-        self.note_dict = {'c0': {'ratio': 1, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'csharp0': {'ratio': 1.059, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'd0': {'ratio': 1.122, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'dsharp0': {'ratio': 1.189, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'e0': {'ratio': 1.26, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'f0': {'ratio': 1.335, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'fsharp0': {'ratio': 1.414, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'g0': {'ratio': 1.335, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'gsharp0': {'ratio': 1.587, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'a1': {'ratio': 1.682, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'asharp1': {'ratio': 1.782, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'b1': {'ratio': 1.888, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'c1': {'ratio': 2, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'csharp1':{'ratio':2.118, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'd1':{'ratio':2.244, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'dsharp1':{'ratio':2.378, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'e1':{'ratio':2.52, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'f1':{'ratio':2.67, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'fsharp1':{'ratio':2.828, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'g1':{'ratio':2.67, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'gsharp1': {'ratio': 3.174, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'a2':{'ratio':3.364, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'asharp2':{'ratio':3.564, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'b2':{'ratio':3.776, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'c2':{'ratio':4, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'csharp2':{'ratio':4.236, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'd2':{'ratio':3.366, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'dsharp2':{'ratio':3.567, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'e2':{'ratio':3.78, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'f2':{'ratio':4.005, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'fsharp2':{'ratio':4.242, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'g2':{'ratio':4.005, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'gsharp2': {'ratio': 4.761, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'a3':{'ratio':5.046, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'asharp3':{'ratio':5.346, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'b3':{'ratio':5.664, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'c3':{'ratio':6, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'csharp3':{'ratio':6.354, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'd3':{'ratio':4.488, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'dsharp3':{'ratio':4.756, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'e3':{'ratio':5.04, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'f3':{'ratio':5.34, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'fsharp3':{'ratio':5.656, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'g3':{'ratio':5.34, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'gsharp3':{'ratio':6.348, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'a4':{'ratio':6.728, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'asharp4':{'ratio':7.128, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'b4':{'ratio':7.552, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'c4':{'ratio':8, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''},
-        'csharp4':{'ratio':8.472, 'key':'', 'snd_arry': '', 'resist': 0, 'octave': 0, 'row': ''}}
-
-        self.notes = ['c0','csharp0','d0','dsharp0','e0','f0','fsharp0','g0','gsharp0','a1','asharp1','b1', \
-                      'c1', 'csharp1', 'd1', 'dsharp1', 'e1', 'f1', 'fsharp1', 'g1', 'gsharp1', 'a2', 'asharp2', 'b2', \
-                      'c2', 'csharp2', 'd2', 'dsharp2', 'e2', 'f2', 'fsharp2', 'g2', 'gsharp2', 'a3', 'asharp3', 'b3', \
-                      'c3', 'csharp3', 'd3', 'dsharp3', 'e3', 'f3', 'fsharp3', 'g3', 'gsharp3', 'a4', 'asharp4', 'b4', \
-                      'c4', 'csharp4']
-        self.toprow = ['F1','F2','F3','F4','F5','F6','F7','F8','F9']
-        self.bottomrow = ['1','2','3','4','5','6','7','8','9','10', '-','=','BACKSPACE']
         self.num_top_keys = len(self.toprow)
         self.num_bottom_keys = len(self.bottomrow)
         self.num_keys=self.num_top_keys+self.num_bottom_keys
         self.top_keys=[]
         self.bottom_keys=[]
         self.keys={}
-        d = collections.deque(self.notes)
-        d.rotate(len(self.notes)-(self.notes.index(self.tuning)+1))
+#        d = collections.deque(self.notes)
+#        self.notes=list(d.rotate(len(self.notes)-(self.notes.index(self.tuning)+1)))
         self.notes=self.notes[self.notes.index(self.tuning):self.num_keys+1]
         x=0
         y=0
